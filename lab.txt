@@ -665,17 +665,19 @@ export default App;
     Cart — A web page showing the quantities and titles selected by the user.
     Checkout — A print-ready invoice with the list of books
 
+
 import React, { useState } from 'react';
 
 function App() {
     const [page, setPage] = useState(1);
     const [cart, setCart] = useState([]);
+    const [book, setBook] = useState(null);
 
-    let books = [
-        { name: "Java", price: 300 },
-        { name: "Python", price: 400 },
-        { name: "C", price: 200 },
-        { name: "HTML", price: 250 }
+    const books = [
+        { id: 1, title: "Python Programming", price: 450 },
+        { id: 2, title: "Machine Learning", price: 550 },
+        { id: 3, title: "Web Development", price: 400 },
+        { id: 4, title: "Data Science", price: 600 }
     ];
 
     return (
@@ -683,43 +685,64 @@ function App() {
             <h1>Book Store</h1>
 
             <button onClick={() => setPage(1)}>Home</button>
-            <button onClick={() => setPage(2)}>Product</button>
             <button onClick={() => setPage(3)}>Cart</button>
-            <button onClick={() => setPage(4)}>Checkout</button>
 
-            {page === 1 && <h2>Welcome to Book Store</h2>}
-
-            {page === 2 && (
+            {page === 1 && (
                 <>
-                    <h2>Available Books</h2>
-                    {books.map((b, i) => (
-                        <p key={i}>
-                            {b.name} - ₹{b.price}
-                            <button onClick={() => setCart([...cart, b])}>
-                                Add
+                    <h2>Home Page</h2>
+
+                    {books.map((b) => (
+                        <p key={b.id}>
+                            {b.title} - ₹{b.price}
+
+                            <button onClick={() => {
+                                setBook(b);
+                                setPage(2);
+                            }}>
+                                View Product
                             </button>
                         </p>
                     ))}
                 </>
             )}
 
+            {page === 2 && (
+                <>
+                    <h2>Product Details</h2>
+                    <h3>{book.title}</h3>
+                    <p>Price: ₹{book.price}</p>
+
+                    <button onClick={() => setCart([...cart, book])}>
+                        Add to Cart
+                    </button>
+                </>
+            )}
+
             {page === 3 && (
                 <>
                     <h2>Shopping Cart</h2>
+
                     {cart.map((b, i) => (
-                        <p key={i}>{b.name} - ₹{b.price}</p>
+                        <p key={i}>
+                            {b.title} - ₹{b.price}
+                        </p>
                     ))}
+
+                    <h3>
+                        Total: ₹{cart.reduce((sum, b) => sum + b.price, 0)}
+                    </h3>
+
+                    <button onClick={() => setPage(4)}>
+                        Checkout
+                    </button>
                 </>
             )}
 
             {page === 4 && (
                 <>
                     <h2>Checkout</h2>
-                    <p>Total Books: {cart.length}</p>
-                    <h3>
-                        Total Amount: ₹
-                        {cart.reduce((sum, b) => sum + b.price, 0)}
-                    </h3>
+                    <h3>Order placed successfully!</h3>
+
                     <button onClick={() => window.print()}>
                         Print Invoice
                     </button>
