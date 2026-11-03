@@ -1,0 +1,732 @@
+3) Explore the various node modules: os, http, etc.
+
+const os = require("os");
+const http = require("http");
+const fs = require("fs");
+const path = require("path");
+
+// OS module
+console.log("Platform:", os.platform());
+console.log("Architecture:", os.arch());
+console.log("Free Memory:", os.freemem());
+console.log("Total Memory:", os.totalmem());
+
+// Path module
+console.log("File Name:", path.basename(__filename));
+console.log("Directory:", path.dirname(__filename));
+
+// FS module
+fs.writeFileSync("sample.txt", "Hello from Node.js");
+console.log("File created successfully");
+
+// HTTP module
+const server = http.createServer((req, res) => {
+    res.writeHead(200, {
+        "Content-Type": "text/plain"
+    });
+    res.end("Hello! Node.js HTTP Server is running.");
+});
+
+server.listen(3000, () => {
+    console.log("Server running at http://localhost:3000");
+});
+
+
+==================================================================================
+
+
+4) Create a REST API and perform various CRUD operations on that.
+
+const express = require("express");
+const app = express();
+
+app.use(express.json());
+
+let students = [
+    { id: 1, name: "Rahul", age: 20 },
+    { id: 2, name: "Priya", age: 21 }
+];
+
+// CREATE - Add a student
+app.post("/students", (req, res) => {
+    students.push(req.body);
+    res.send("Student added successfully");
+});
+
+// READ - Get all students
+app.get("/students", (req, res) => {
+    res.json(students);
+});
+
+// UPDATE - Update a student
+app.put("/students/:id", (req, res) => {
+    const id = Number(req.params.id);
+    const student = students.find(s => s.id === id);
+
+    if (!student) {
+        return res.status(404).send("Student not found");
+    }
+
+    student.name = req.body.name;
+    student.age = req.body.age;
+
+    res.send("Student updated successfully");
+});
+
+// DELETE - Delete a student
+app.delete("/students/:id", (req, res) => {
+    const id = Number(req.params.id);
+    students = students.filter(s => s.id !== id);
+
+    res.send("Student deleted successfully");
+});
+
+app.listen(3000, () => {
+    console.log("Server running on port 3000");
+});
+
+
+=============================================================
+
+
+
+5) Develop an express web application that can interact with a service to perform CRUD operations on student data. (Use Postman)
+
+
+const express = require("express");
+const cors = require("cors");
+
+const app = express();
+
+// Middleware
+app.use(cors());
+app.use(express.json());
+
+// Student data
+let students = [
+    { id: 1, name: "Rahul", age: 20 },
+    { id: 2, name: "Priya", age: 21 }
+];
+
+// CREATE - Add a student
+app.post("/students", (req, res) => {
+    const student = req.body;
+    students.push(student);
+
+    res.status(201).json({
+        message: "Student added successfully",
+        student: student
+    });
+});
+
+// READ - Get all students
+app.get("/students", (req, res) => {
+    res.json(students);
+});
+
+// READ - Get one student by ID
+app.get("/students/:id", (req, res) => {
+    const id = Number(req.params.id);
+
+    const student = students.find(s => s.id === id);
+
+    if (!student) {
+        return res.status(404).send("Student not found");
+    }
+
+    res.json(student);
+});
+
+// UPDATE - Update a student
+app.put("/students/:id", (req, res) => {
+    const id = Number(req.params.id);
+
+    const student = students.find(s => s.id === id);
+
+    if (!student) {
+        return res.status(404).send("Student not found");
+    }
+
+    student.name = req.body.name;
+    student.age = req.body.age;
+
+    res.json({
+        message: "Student updated successfully",
+        student: student
+    });
+});
+
+// DELETE - Delete a student
+app.delete("/students/:id", (req, res) => {
+    const id = Number(req.params.id);
+
+    const exists = students.some(s => s.id === id);
+
+    if (!exists) {
+        return res.status(404).send("Student not found");
+    }
+
+    students = students.filter(s => s.id !== id);
+
+    res.send("Student deleted successfully");
+});
+
+// Start server
+app.listen(3000, () => {
+    console.log("Server running at http://localhost:3000");
+});
+
+html :
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Student Management</title>
+</head>
+<body>
+
+    <h2>Student Management System</h2>
+
+    <input type="number" id="id" placeholder="Student ID">
+    <input type="text" id="name" placeholder="Student Name">
+    <input type="number" id="age" placeholder="Age">
+
+    <br><br>
+
+    <button onclick="addStudent()">Add Student</button>
+    <button onclick="getStudents()">View Students</button>
+    <button onclick="updateStudent()">Update Student</button>
+    <button onclick="deleteStudent()">Delete Student</button>
+
+    <h3>Student List</h3>
+    <ul id="list"></ul>
+
+    <script>
+        const url = "http://localhost:3000/students";
+
+        // CREATE
+        async function addStudent() {
+            const student = {
+                id: Number(document.getElementById("id").value),
+                name: document.getElementById("name").value,
+                age: Number(document.getElementById("age").value)
+            };
+
+            await fetch(url, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(student)
+            });
+
+            getStudents();
+        }
+
+        // READ
+        async function getStudents() {
+            const response = await fetch(url);
+            const students = await response.json();
+
+            const list = document.getElementById("list");
+            list.innerHTML = "";
+
+            students.forEach(student => {
+                const li = document.createElement("li");
+                li.textContent =
+                    student.id + " - " +
+                    student.name + " - " +
+                    student.age;
+                list.appendChild(li);
+            });
+        }
+
+        // UPDATE
+        async function updateStudent() {
+            const id = document.getElementById("id").value;
+
+            const student = {
+                name: document.getElementById("name").value,
+                age: Number(document.getElementById("age").value)
+            };
+
+            await fetch(url + "/" + id, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(student)
+            });
+
+            getStudents();
+        }
+
+        // DELETE
+        async function deleteStudent() {
+            const id = document.getElementById("id").value;
+
+            await fetch(url + "/" + id, {
+                method: "DELETE"
+            });
+
+            getStudents();
+        }
+
+        // Load students when page opens
+        getStudents();
+    </script>
+
+</body>
+</html>
+
+=============================================================================
+
+
+6) For the above application create authorized end points using JWT (JSON Web Token).
+
+const express = require("express");
+const jwt = require("jsonwebtoken");
+
+const app = express();
+app.use(express.json());
+const secret = "admin123";
+
+let students = [
+    { id: 1, name: "rishi" },
+    { id: 2, name: "anu" }
+];
+
+app.post("/login", (req, res) => {
+    const token = jwt.sign(
+        { user: req.body.user }, secret
+    );
+    res.json({ token: token });
+});
+
+function auth(req, res, next) {
+    try {
+        jwt.verify(req.headers.authorization.split(" ")[1], secret);
+        next();
+    } catch {
+        res.status(401).send("invalid");
+    }
+}
+
+app.get("/students", auth, (req, res) => {
+    res.json(students);
+});
+
+app.put("/students/:id", auth, (req, res) => {
+    const id = Number(req.params.id);
+    const student = students.find(s => s.id === id);
+
+    if (student) {
+        student.name = req.body.name;
+        res.send("successfully updated");
+    } else {
+        res.status(404).send("Student not found");
+    }
+});
+
+app.delete("/students/:id", auth, (req, res) => {
+    const id = Number(req.params.id);
+    students = students.filter(s => s.id !== id);
+    res.send("successfully deleted");
+});
+
+app.listen(3000);
+
+
+====================================================================================================================
+
+
+9) a. Create a functional component that accept the arbitrary inputs (called props) and display the value.
+   b. Create a class component that accept the arbitrary inputs (called props) and display the value.
+   (Introduction to Components in React, Types of Components in react, Functional vs Class Component, Passing the props to child Components).
+
+  a) Functional Component
+  function Student(props) {
+    return <h1>Name: {props.name}</h1>;
+  }
+
+  function App() {
+    return <Student name="Rishi" />;
+  }
+
+  export default App;
+
+---------------------------
+
+  b) Class Component
+  import React, { Component } from "react";
+
+  class Student extends Component {
+    render() {
+      return <h1>Name: {this.props.name}</h1>;
+    }
+  }
+
+  function App() {
+    return <Student name="Rishi" />;
+  }
+
+  export default App;
+
+
+==========================================================================================
+
+10) Create a class component that accept the date in the form of State and displays the date.
+    (Passing the state to Class Component, Props vs State).
+
+import { Component } from "react";
+
+class DateDisplay extends Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            date: props.date
+        };
+    }
+
+    render() {
+        return (
+            <div>
+                <h2>Current Date</h2>
+                <p>{this.state.date.toLocaleString()}</p>
+            </div>
+        );
+    }
+}
+
+function App() {
+    const date = new Date();
+
+    return (
+        <div>
+            <DateDisplay date={date} />
+        </div>
+    );
+}
+
+export default App;
+
+==============================================================================
+11) Create a react application to demonstrate the component lifecycle.
+    (Understanding the Lifecycle Methods: Phases of React Component Lifecycle, React Component lifecycle methods)
+
+
+import { Component ,useState} from "react";
+class LifeCycle extends Component{
+  constructor(props){
+    super(props);
+    this.state={
+      count:0
+    };
+    console.log("constructor called");
+  };
+  componentDidMount(){
+    console.log("component mounted");
+  }
+  componentDidUpdate(){
+    console.log("component updated");
+  }
+  componentWillUnmount(){
+    console.log("component unmounted");
+  }
+  render(){
+    
+    return (
+      <div>
+        <h2>React Component LifeCycle</h2>
+        <p>Count :{this.state.count}</p>
+        <button onClick={ () =>this.setState({ count : this.state.count+1})}>Increment</button>
+      </div>
+    )
+  }
+}
+
+function App(){
+  const [show , setShow]=useState(true)
+  return (
+
+    <div>
+      <button onClick={(e)=>setShow(!show)}>mount/unmount</button>
+      { show && < LifeCycle/>}
+    </div>
+  )
+}
+export default App;
+
+
+
+======================================================================
+
+12) Create a react application to create a two buttons and handle the click events. The click event of first button display the current system date and time using event listener (Normal functions). For click event of second button display "Good Bye" by using event listener (arrow functions)
+    (Handling the events in React, Binding events listeners)
+
+import { useState } from "react";
+
+function App() {
+    const [result, setResult] = useState("");
+
+    // Normal function
+    function showDate() {
+        setResult(new Date().toLocaleString());
+    }
+
+    return (
+        <div>
+            <button onClick={showDate}>
+                Show Date and Time
+            </button>
+
+            <button onClick={() => setResult("Good Bye")}>
+                Say Goodbye
+            </button>
+
+            <h3>{result}</h3>
+        </div>
+    );
+}
+
+export default App;
+
+
+
+
+==================================================
+
+
+13) Create a react application to implement the calculator application by creating UI and providing the functionality using events. Also make it look good by using styles.
+    (React Styling: How to use the Styles in React)
+
+import { useState } from "react";
+import './App.css'
+function App() {
+  const [a, setA] = useState("");
+  const [b, setB] = useState("");
+  const [result, setResult] = useState("");
+
+  function calculate(op) {
+    let x = Number(a);
+    let y = Number(b);
+
+    if (op === "+")
+      setResult(x + y);
+    else if (op === "-")
+      setResult(x - y);
+    else if (op === "*")
+      setResult(x * y);
+    else if (op === "/") {
+      if (y === 0)
+        setResult("Not possible");
+      else
+        setResult(x / y);
+    }
+  }
+
+  return (
+    <div className="calculator">
+      <h2>Calculator</h2>
+
+      <input type="number"
+        onChange={(e) => setA(e.target.value)} />
+
+      <input type="number"
+        onChange={(e) => setB(e.target.value)} />
+
+      <div>
+        <button onClick={() => calculate("+")}>+</button>
+        <button onClick={() => calculate("-")}>-</button>
+        <button onClick={() => calculate("*")}>*</button>
+        <button onClick={() => calculate("/")}>/</button>
+      </div>
+
+      <h2>{result}</h2>
+    </div>
+  );
+}
+
+export default App;
+
+
+
+======================================================================
+
+
+
+14) Create a react application to create a registration page using forms as controlled components.
+    (Working with the React Forms)
+
+
+import { useState } from "react";
+
+function App() {
+  const [name, setName] = useState("");
+  const [pass, setPass] = useState("");
+  const [result, setResult] = useState(false);
+
+  function display(e) {
+    e.preventDefault();
+    setResult(true);
+  }
+
+  return (
+    <div>
+      <form onSubmit={display}>
+        <label>Name</label>
+        <br />
+        <input
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          required
+        />
+
+        <br /><br />
+
+        <label>Password</label>
+        <br />
+        <input
+          type="password"
+          value={pass}
+          onChange={(e) => setPass(e.target.value)}
+          required
+        />
+
+        <br /><br />
+        <button type="submit">Submit</button>
+      </form>
+
+      {result && (
+        <div>
+          <h3>Registration Successful!</h3>
+          <p>Name: {name}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default App;
+
+
+
+==============================================================
+
+
+
+15) Create a react application to understand how the React Router works. The application will contain four components: home component, product component, about component, and contact component. We will use React Router to navigate between these components.
+    (React Routing, React Router components)
+
+import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
+
+function Home() {
+  return <h1>Home Page</h1>;
+}
+
+function Product() {
+  return <h1>Product Page</h1>;
+}
+
+function About() {
+  return <h1>About Page</h1>;
+}
+
+function Contact() {
+  return <h1>Contact Page</h1>;
+}
+
+function App() {
+  return (
+    <BrowserRouter>
+      <nav>
+        <Link to="/">Home</Link> {" | "}
+        <Link to="/product">Product</Link> {" | "}
+        <Link to="/about">About</Link> {" | "}
+        <Link to="/contact">Contact</Link>
+      </nav>
+
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/product" element={<Product />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/contact" element={<Contact />} />
+      </Routes>
+    </BrowserRouter>
+  );
+}
+
+export default App;
+
+
+===============================================
+
+
+16) Create a simple e-commerce storefront for a bookstore which consists of four screens:
+    Home — The storefront with a book list
+    Product page — A separate product page
+    Cart — A web page showing the quantities and titles selected by the user.
+    Checkout — A print-ready invoice with the list of books
+
+import React, { useState } from 'react';
+
+function App() {
+    const [page, setPage] = useState(1);
+    const [cart, setCart] = useState([]);
+
+    let books = [
+        { name: "Java", price: 300 },
+        { name: "Python", price: 400 },
+        { name: "C", price: 200 },
+        { name: "HTML", price: 250 }
+    ];
+
+    return (
+        <div>
+            <h1>Book Store</h1>
+
+            <button onClick={() => setPage(1)}>Home</button>
+            <button onClick={() => setPage(2)}>Product</button>
+            <button onClick={() => setPage(3)}>Cart</button>
+            <button onClick={() => setPage(4)}>Checkout</button>
+
+            {page === 1 && <h2>Welcome to Book Store</h2>}
+
+            {page === 2 && (
+                <>
+                    <h2>Available Books</h2>
+                    {books.map((b, i) => (
+                        <p key={i}>
+                            {b.name} - ₹{b.price}
+                            <button onClick={() => setCart([...cart, b])}>
+                                Add
+                            </button>
+                        </p>
+                    ))}
+                </>
+            )}
+
+            {page === 3 && (
+                <>
+                    <h2>Shopping Cart</h2>
+                    {cart.map((b, i) => (
+                        <p key={i}>{b.name} - ₹{b.price}</p>
+                    ))}
+                </>
+            )}
+
+            {page === 4 && (
+                <>
+                    <h2>Checkout</h2>
+                    <p>Total Books: {cart.length}</p>
+                    <h3>
+                        Total Amount: ₹
+                        {cart.reduce((sum, b) => sum + b.price, 0)}
+                    </h3>
+                    <button onClick={() => window.print()}>
+                        Print Invoice
+                    </button>
+                </>
+            )}
+        </div>
+    );
+}
+
+export default App;
